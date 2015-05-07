@@ -32,7 +32,7 @@ namespace alpr
   FeatureMatcher::FeatureMatcher(Config* config)
   {
     this->config = config;
-
+    #if CV_VERSION_MAJOR == 2
     //this->descriptorMatcher = DescriptorMatcher::create( "BruteForce-HammingLUT" );
     this->descriptorMatcher = new BFMatcher(NORM_HAMMING, false);
 
@@ -40,6 +40,7 @@ namespace alpr
 
     this->detector = new FastFeatureDetector(10, true);
     this->extractor = new BRISK(10, 1, 0.9);
+    #endif
   }
 
   FeatureMatcher::~FeatureMatcher()
