@@ -60,9 +60,15 @@ namespace alpr
     }
 
 
-    vector<PlateRegion> detectedRegions;
+    vector<PlateRegion> detectedRegions;   
     for (int i = 0; i < regionsOfInterest.size(); i++)
     {
+      // Sanity check.  If roi width or height is less than minimum possible plate size,
+      // then skip it
+      if ((regionsOfInterest[i].width < config->minPlateSizeWidthPx) || 
+          (regionsOfInterest[i].height < config->minPlateSizeHeightPx))
+        continue;
+      
       Mat cropped = frame_gray(regionsOfInterest[i]);
       vector<PlateRegion> subRegions = doCascade(cropped, regionsOfInterest[i].x, regionsOfInterest[i].y);
 
@@ -111,10 +117,16 @@ namespace alpr
 
     for( unsigned int i = 0; i < plates.size(); i++ )
     {
-      plates[i].x = (plates[i].x / scale_factor) + offset_x;
-      plates[i].y = (plates[i].y / scale_factor) + offset_y;
+      plates[i].x = (plates[i].x / scale_factor);
+      plates[i].y = (plates[i].y / scale_factor);
       plates[i].width = plates[i].width / scale_factor;
       plates[i].height = plates[i].height / scale_factor;
+      
+      // Ensure that the rectangle isn't < 0 or > maxWidth/Height
+      plates[i] = expandRect(plates[i], 0, 0, w, h);
+      
+      plates[i].x = plates[i].x + offset_x;
+      plates[i].y = plates[i].y + offset_y;
     }
 
     vector<PlateRegion> orderedRegions = aggregateRegions(plates);
