@@ -96,7 +96,7 @@ Where:
 Binaries
 ----------
 
-Pre-compiled [64-bit Windows binaries] (https://github.com/openalpr/openalpr/releases/download/v2.0.1/openalpr-2.0.1-win-64bit.zip) can be downloaded on the [releases page] (https://github.com/openalpr/openalpr/releases)
+Pre-compiled Windows binaries can be downloaded on the [releases page] (https://github.com/openalpr/openalpr/releases)
 
 Install OpenALPR on Ubuntu 14.04 x64 with the following commands:
 
@@ -151,12 +151,6 @@ Contributions
 Improvements to the OpenALPR library are always welcome.  Please review the [OpenALPR design description](https://github.com/openalpr/openalpr/wiki/OpenALPR-Design) and get started.
 
 Code contributions are not the only way to help out.  Do you have a large library of license plate images?  If so, please upload your data to the anonymous FTP located at upload.openalpr.com.  Do you have time to "tag" plate images in an input image or help in other ways?  Please let everyone know by posting a note in the forum.
-
-Donations
----------
-OpenALPR provides bounties for open issues.  Other developers can fix/enhance the library and claim those bounties.  The best way to donate to the project is to add a bounty to one or more of the open issues on BountyShare
-
-[![Bountysource](https://www.bountysource.com/badge/team?team_id=830&style=bounties_received)](https://www.bountysource.com/teams/openalpr/issues?utm_source=OpenALPR&utm_medium=shield&utm_campaign=bounties_received)
 
 
 License
