@@ -31,7 +31,9 @@
 #include "support/timing.h"
 #include "support/platform.h"
 #include "video/videobuffer.h"
+#if CV_VERSION_MAJOR == 2
 #include "motiondetector.h"
+#endif
 #include "alpr.h"
 
 using namespace alpr;
@@ -40,7 +42,9 @@ const std::string MAIN_WINDOW_NAME = "ALPR main window";
 
 const bool SAVE_LAST_VIDEO_STILL = false;
 const std::string LAST_VIDEO_STILL_LOCATION = "/tmp/laststill.jpg";
+#if CV_VERSION_MAJOR == 2
 MotionDetector motiondetector;
+#endif
 bool do_motiondetection = true;
 
 /** Function Headers */
@@ -78,7 +82,9 @@ int main( int argc, const char** argv )
   TCLAP::SwitchArg jsonSwitch("j","json","Output recognition results in JSON format.  Default=off", cmd, false);
   TCLAP::SwitchArg detectRegionSwitch("d","detect_region","Attempt to detect the region of the plate image.  [Experimental]  Default=off", cmd, false);
   TCLAP::SwitchArg clockSwitch("","clock","Measure/print the total time to process image and all plates.  Default=off", cmd, false);
+#if CV_VERSION_MAJOR == 2
   TCLAP::SwitchArg motiondetect("", "motion", "Use motion detection on video file or stream.  Default=off", cmd, false);
+#endif
 
   try
   {
@@ -106,7 +112,9 @@ int main( int argc, const char** argv )
     templatePattern = templatePatternArg.getValue();
     topn = topNArg.getValue();
     measureProcessingTime = clockSwitch.getValue();
+#if CV_VERSION_MAJOR == 2
 	do_motiondetection = motiondetect.getValue();
+#endif
   }
   catch (TCLAP::ArgException &e)    // catch any exceptions
   {
@@ -161,7 +169,9 @@ int main( int argc, const char** argv )
 
     while (cap.read(frame))
     {
+#if CV_VERSION_MAJOR == 2
 	  if (framenum == 0) motiondetector.ResetMotionDetection(&frame);
+#endif
 	  detectandshow(&alpr, frame, "", outputJson);
       sleep_ms(10);
       framenum++;
@@ -184,7 +194,9 @@ int main( int argc, const char** argv )
       
       if (response != -1)
       {
+#if CV_VERSION_MAJOR == 2
 		  if (framenum == 0) motiondetector.ResetMotionDetection(&latestFrame);
+#endif
 		  detectandshow(&alpr, latestFrame, "", outputJson);
       }
       
@@ -215,7 +227,9 @@ int main( int argc, const char** argv )
           cv::imwrite(LAST_VIDEO_STILL_LOCATION, frame);
         }
         std::cout << "Frame: " << framenum << std::endl;
+#if CV_VERSION_MAJOR == 2
 		if (framenum == 0) motiondetector.ResetMotionDetection(&frame);
+#endif
 		detectandshow(&alpr, frame, "", outputJson);
         //create a 1ms delay
         sleep_ms(1);
@@ -291,12 +305,15 @@ bool detectandshow( Alpr* alpr, cv::Mat frame, std::string region, bool writeJso
   getTimeMonotonic(&startTime);
 
   std::vector<AlprRegionOfInterest> regionsOfInterest;
+#if CV_VERSION_MAJOR == 2
   if (do_motiondetection)
   {
 	  cv::Rect rectan = motiondetector.MotionDetect(&frame);
 	  if (rectan.width>0) regionsOfInterest.push_back(AlprRegionOfInterest(rectan.x, rectan.y, rectan.width, rectan.height));
   }
-  else regionsOfInterest.push_back(AlprRegionOfInterest(0, 0, frame.cols, frame.rows));
+  else
+#endif
+      regionsOfInterest.push_back(AlprRegionOfInterest(0, 0, frame.cols, frame.rows));
   AlprResults results;
   if (regionsOfInterest.size()>0) results = alpr->recognize(frame.data, frame.elemSize(), frame.cols, frame.rows, regionsOfInterest);
 

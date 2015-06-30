@@ -1,7 +1,7 @@
+#if CV_VERSION_MAJOR == 2
+
 #include "motiondetector.h"
-
 using namespace cv;
-
 namespace alpr
 {
   
@@ -68,3 +68,4 @@ cv::Rect MotionDetector::MotionDetect(cv::Mat* frame)
 }
 
 }
+#endif
