@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  *
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  *
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License
  * version 3 as published by the Free Software Foundation
  *
@@ -31,7 +31,6 @@ namespace alpr
     this->pipeline_data = pipeline_data;
 
     // First re-crop the area from the original picture knowing the text position
-    this->confidence = 0;
 
   }
 
@@ -128,7 +127,6 @@ namespace alpr
     PlateCorners cornerFinder(newCrop, &plateLines, pipeline_data, newLines);
     vector<Point> smallPlateCorners = cornerFinder.findPlateCorners();
 
-    confidence = cornerFinder.confidence;
 
     // Transform the best corner points back to the original image
     std::vector<Point2f> imgArea;

@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  *
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  *
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License
  * version 3 as published by the Free Software Foundation
  *
@@ -24,7 +24,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
-#include "support/regex/oniguruma.h"
+#include "support/re2.h"
 #include "support/utf8.h"
 #include "support/tinythread.h"
 
@@ -43,7 +43,7 @@ namespace alpr
       bool valid;
       
       int numchars;
-      regex_t* onig_regex;
+      re2::RE2* re2_regex;
       std::string original;
       std::string regex;
       std::string region;

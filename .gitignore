@@ -1,5 +1,6 @@
 *~
 build/
+windows/
 scratch/
 out/
 debian_repo
@@ -27,6 +28,7 @@ openalpr_*.tar.gz
 openalpr-*.asc
 openalpr-*.sig
 openalpr-*.tar.gz
+*.orig
 
 # Visual Studio files
 src.sln
@@ -36,6 +38,7 @@ src.sln
 *.sdf
 *.opensdf
 *.dir/
+*.ipch
 Debug/
 Release/
 

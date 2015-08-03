@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  * 
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  * 
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License 
  * version 3 as published by the Free Software Foundation 
  * 
@@ -18,12 +18,22 @@
 */
 
 #include "config.h"
+#include "support/filesystem.h"
+#include "support/platform.h"
+#include "simpleini/simpleini.h"
 
 using namespace std;
 
 namespace alpr
 {
 
+  
+  int getInt(CSimpleIniA* ini, std::string section, std::string key, int defaultValue);
+  float getFloat(CSimpleIniA* ini, std::string section, std::string key, float defaultValue);
+  std::string getString(CSimpleIniA* ini, std::string section, std::string key, std::string defaultValue);
+  bool getBoolean(CSimpleIniA* ini, std::string section, std::string key, bool defaultValue);
+  
+  
   Config::Config(const std::string country, const std::string config_file, const std::string runtime_dir)
   {
 
@@ -241,19 +251,20 @@ namespace alpr
     
   }
 
-  void Config::debugOff()
+  void Config::setDebug(bool value)
   {
-    debugGeneral = 	false;
-    debugTiming = 	false;
-    debugStateId = 	false;
-    debugPlateLines = 	false;
-    debugPlateCorners = 	false;
-    debugCharSegmenter = 	false;
-    debugCharAnalysis =	false;
-    debugColorFiler = 	false;
-    debugOcr = 		false;
-    debugPostProcess = 	false;
-    debugPauseOnFrame = 	false;
+    debugGeneral = value;
+    debugTiming = value;
+    debugStateId = value;
+    debugPlateLines = value;
+    debugPrewarp = value;
+    debugPlateCorners = value;
+    debugCharSegmenter = value;
+    debugCharAnalysis = value;
+    debugColorFiler = value;
+    debugOcr = value;
+    debugPostProcess = value;
+    debugPauseOnFrame = value;
   }
 
 
@@ -277,52 +288,44 @@ namespace alpr
 
 
 
-  float Config::getFloat(CSimpleIniA* ini, string section, string key, float defaultValue)
+  float getFloat(CSimpleIniA* ini, string section, string key, float defaultValue)
   {
     const char * pszValue = ini->GetValue(section.c_str(), key.c_str(), NULL /*default*/);
     if (pszValue == NULL)
     {
-      if (this->debugGeneral)
-        std::cout << "Warning: missing configuration entry for: " << section << "->" << key << endl;
       return defaultValue;
     }
 
     float val = atof(pszValue);
     return val;
   }
-  int Config::getInt(CSimpleIniA* ini, string section, string key, int defaultValue)
+  int getInt(CSimpleIniA* ini, string section, string key, int defaultValue)
   {
     const char * pszValue = ini->GetValue(section.c_str(), key.c_str(), NULL /*default*/);
     if (pszValue == NULL)
     {
-      if (this->debugGeneral)
-        std::cout << "Warning: missing configuration entry for: " << section << "->" << key << endl;
       return defaultValue;
     }
 
     int val = atoi(pszValue);
     return val;
   }
-  bool Config::getBoolean(CSimpleIniA* ini, string section, string key, bool defaultValue)
+  bool getBoolean(CSimpleIniA* ini, string section, string key, bool defaultValue)
   {
     const char * pszValue = ini->GetValue(section.c_str(), key.c_str(), NULL /*default*/);
     if (pszValue == NULL)
     {
-      if (this->debugGeneral)
-        std::cout << "Warning: missing configuration entry for: " << section << "->" << key << endl;
       return defaultValue;
     }
 
     int val = atoi(pszValue);
     return val != 0;
   }
-  string Config::getString(CSimpleIniA* ini, string section, string key, string defaultValue)
+  string getString(CSimpleIniA* ini, string section, string key, string defaultValue)
   {
     const char * pszValue = ini->GetValue(section.c_str(), key.c_str(), NULL /*default*/);
     if (pszValue == NULL)
     {
-      if (this->debugGeneral)
-        std::cout << "Warning: missing configuration entry for: " << section << "->" << key << endl;
       return defaultValue;
     }
 

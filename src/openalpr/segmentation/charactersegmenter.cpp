@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  *
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  *
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License
  * version 3 as published by the Free Software Foundation
  *
@@ -159,7 +159,6 @@ namespace alpr
       getTimeMonotonic(&startTime);
 
       filterEdgeBoxes(pipeline_data->thresholds, candidateBoxes, medianCharWidth, avgCharHeight);
-      candidateBoxes = filterMostlyEmptyBoxes(pipeline_data->thresholds, candidateBoxes);
       candidateBoxes = combineCloseBoxes(candidateBoxes, medianCharWidth);
 
       candidateBoxes = filterMostlyEmptyBoxes(pipeline_data->thresholds, candidateBoxes);
@@ -260,7 +259,7 @@ namespace alpr
 
   vector<Rect> CharacterSegmenter::getBestCharBoxes(Mat img, vector<Rect> charBoxes, float avgCharWidth)
   {
-    float MAX_SEGMENT_WIDTH = avgCharWidth * 1.65;
+    float MAX_SEGMENT_WIDTH = avgCharWidth * config->segmentationMaxCharWidthvsAverage;
 
     // This histogram is based on how many char boxes (from ALL of the many thresholded images) are covering each column
     // Makes a sort of histogram from all the previous char boxes.  Figures out the best fit from that.

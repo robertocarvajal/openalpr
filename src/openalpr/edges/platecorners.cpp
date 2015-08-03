@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  *
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  *
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License
  * version 3 as published by the Free Software Foundation
  *
@@ -103,11 +103,16 @@ namespace alpr
 
     // Check if a left/right edge has been established.
     if (bestLeft.p1.x == 0 && bestLeft.p1.y == 0 && bestLeft.p2.x == 0 && bestLeft.p2.y == 0)
-      confidence = 0;
+    {
+      pipelineData->disqualified = true;
+      pipelineData->disqualify_reason = "platecorners did not find a left/right edge";
+    }
     else if (bestTop.p1.x == 0 && bestTop.p1.y == 0 && bestTop.p2.x == 0 && bestTop.p2.y == 0)
-      confidence = 0;
-    else
-      confidence = 100;
+    {
+      pipelineData->disqualified = true;
+      pipelineData->disqualify_reason = "platecorners did not find a top/bottom edge";
+    }
+
 
     vector<Point> corners;
     corners.push_back(bestTop.intersection(bestLeft));

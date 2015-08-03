@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  *
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  *
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License
  * version 3 as published by the Free Software Foundation
  *
@@ -29,6 +29,10 @@ namespace alpr
 {
   AlprImpl::AlprImpl(const std::string country, const std::string configFile, const std::string runtimeDir)
   {
+    
+    timespec startTime;
+    getTimeMonotonic(&startTime);
+    
     config = new Config(country, configFile, runtimeDir);
     
     plateDetector = ALPR_NULL_PTR;
@@ -51,7 +55,12 @@ namespace alpr
     setDefaultRegion("");
     
     prewarp = new PreWarp(config);
-
+    
+    timespec endTime;
+    getTimeMonotonic(&endTime);
+    if (config->debugTiming)
+      cout << "OpenALPR Initialization Time: " << diffclock(startTime, endTime) << "ms." << endl;
+    
   }
   AlprImpl::~AlprImpl()
   {
@@ -152,7 +161,7 @@ namespace alpr
       lp.recognize();
 
       bool plateDetected = false;
-      if (pipeline_data.plate_area_confidence > 10)
+      if (!pipeline_data.disqualified)
       {
         AlprPlateResult plateResult;
         plateResult.region = defaultRegion;
@@ -187,11 +196,15 @@ namespace alpr
 
         ocr->performOCR(&pipeline_data);
         ocr->postProcessor.analyze(plateResult.region, topN);
-        const vector<PPResult> ppResults = ocr->postProcessor.getResults();
 
+        timespec resultsStartTime;
+        getTimeMonotonic(&resultsStartTime);
+
+        const vector<PPResult> ppResults = ocr->postProcessor.getResults();
 
         int bestPlateIndex = 0;
 
+        cv::Mat charTransformMatrix = getCharacterTransformMatrix(&pipeline_data);
         for (unsigned int pp = 0; pp < ppResults.size(); pp++)
         {
 
@@ -211,13 +224,12 @@ namespace alpr
             character_details.character = ppResults[pp].letter_details[c_idx].letter;
             character_details.confidence = ppResults[pp].letter_details[c_idx].totalscore;
             cv::Rect char_rect = pipeline_data.charRegions[ppResults[pp].letter_details[c_idx].charposition];
-            std::vector<AlprCoordinate> charpoints = getCharacterPoints(char_rect, &pipeline_data );
+            std::vector<AlprCoordinate> charpoints = getCharacterPoints(char_rect, charTransformMatrix );
             for (int cpt = 0; cpt < 4; cpt++)
               character_details.corners[cpt] = charpoints[cpt];
             aplate.character_details.push_back(character_details);
           }
           plateResult.topNPlates.push_back(aplate);
-
         }
 
         if (plateResult.topNPlates.size() > bestPlateIndex)
@@ -234,6 +246,10 @@ namespace alpr
         timespec plateEndTime;
         getTimeMonotonic(&plateEndTime);
         plateResult.processing_time_ms = diffclock(platestarttime, plateEndTime);
+        if (config->debugTiming)
+        {
+          cout << "Result Generation Time: " << diffclock(resultsStartTime, plateEndTime) << "ms." << endl;
+        }
 
         if (plateResult.topNPlates.size() > 0)
         {
@@ -251,9 +267,6 @@ namespace alpr
           plateQueue.push(plateRegion.children[childidx]);
         }
       }
-
-
-
 
     }
 
@@ -555,11 +568,21 @@ namespace alpr
 
   void AlprImpl::setDetectRegion(bool detectRegion)
   {
+    
     this->detectRegion = detectRegion;
     if (detectRegion && this->stateIdentifier == NULL)
     {
+        timespec startTime;
+        getTimeMonotonic(&startTime);
+        
         this->stateIdentifier = new StateIdentifier(this->config);
+        
+        timespec endTime;
+        getTimeMonotonic(&endTime);
+        if (config->debugTiming)
+          cout << "State Identification Initialization Time: " << diffclock(startTime, endTime) << "ms." << endl;
     }
+
 
   }
   void AlprImpl::setTopN(int topn)
@@ -579,22 +602,7 @@ namespace alpr
     return ss.str();
   }
   
-  std::vector<AlprCoordinate> AlprImpl::getCharacterPoints(cv::Rect char_rect, PipelineData* pipeline_data ) {
-    
-
-
-    std::vector<Point2f> points;
-    points.push_back(Point2f(char_rect.x, char_rect.y));
-    points.push_back(Point2f(char_rect.x + char_rect.width, char_rect.y));
-    points.push_back(Point2f(char_rect.x + char_rect.width, char_rect.y + char_rect.height));
-    points.push_back(Point2f(char_rect.x, char_rect.y + char_rect.height));
-    
-    Mat img = pipeline_data->colorImg;
-    Mat debugImg(img.size(), img.type());
-    img.copyTo(debugImg);
-    
-    
-   
+  cv::Mat AlprImpl::getCharacterTransformMatrix(PipelineData* pipeline_data ) {
     std::vector<Point2f> crop_corners;
     crop_corners.push_back(Point2f(0,0));
     crop_corners.push_back(Point2f(pipeline_data->crop_gray.cols,0));
@@ -603,6 +611,19 @@ namespace alpr
 
     // Transform the points from the cropped region (skew corrected license plate region) back to the original image
     cv::Mat transmtx = cv::getPerspectiveTransform(crop_corners, pipeline_data->plate_corners);
+    
+    return transmtx;
+  }
+  
+  std::vector<AlprCoordinate> AlprImpl::getCharacterPoints(cv::Rect char_rect, cv::Mat transmtx ) {
+    
+
+    std::vector<Point2f> points;
+    points.push_back(Point2f(char_rect.x, char_rect.y));
+    points.push_back(Point2f(char_rect.x + char_rect.width, char_rect.y));
+    points.push_back(Point2f(char_rect.x + char_rect.width, char_rect.y + char_rect.height));
+    points.push_back(Point2f(char_rect.x, char_rect.y + char_rect.height));
+    
     cv::perspectiveTransform(points, points, transmtx);
     
     // If using prewarp, remap the points to the original image

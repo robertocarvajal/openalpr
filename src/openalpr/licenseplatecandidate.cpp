@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  *
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  *
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License
  * version 3 as published by the Free Software Foundation
  *
@@ -46,7 +46,6 @@ namespace alpr
   {
     charSegmenter = NULL;
 
-    pipeline_data->plate_area_confidence = 0;
     pipeline_data->isMultiline = config->multiline;
 
 
@@ -58,72 +57,69 @@ namespace alpr
 
     CharacterAnalysis textAnalysis(pipeline_data);
 
-    if (textAnalysis.confidence > 10)
-    {
+    if (pipeline_data->disqualified)
+      return;
 
-      EdgeFinder edgeFinder(pipeline_data);
+    EdgeFinder edgeFinder(pipeline_data);
 
-      pipeline_data->plate_corners = edgeFinder.findEdgeCorners();
+    pipeline_data->plate_corners = edgeFinder.findEdgeCorners();
 
-      if (edgeFinder.confidence > 0)
-      {
+    if (pipeline_data->disqualified)
+      return;
 
-        timespec startTime;
-        getTimeMonotonic(&startTime);
-
-
-        Mat originalCrop = pipeline_data->crop_gray;
-
-        Transformation imgTransform(this->pipeline_data->grayImg, pipeline_data->crop_gray, expandedRegion);
-
-        Size cropSize = imgTransform.getCropSize(pipeline_data->plate_corners, 
-                Size(pipeline_data->config->ocrImageWidthPx, pipeline_data->config->ocrImageHeightPx));
-        Mat transmtx = imgTransform.getTransformationMatrix(pipeline_data->plate_corners, cropSize);
-        pipeline_data->crop_gray = imgTransform.crop(cropSize, transmtx);
+    timespec startTime;
+    getTimeMonotonic(&startTime);
 
 
-        if (this->config->debugGeneral)
-          displayImage(config, "quadrilateral", pipeline_data->crop_gray);
+    Mat originalCrop = pipeline_data->crop_gray;
+
+    Transformation imgTransform(this->pipeline_data->grayImg, pipeline_data->crop_gray, expandedRegion);
+
+    Size cropSize = imgTransform.getCropSize(pipeline_data->plate_corners, 
+            Size(pipeline_data->config->ocrImageWidthPx, pipeline_data->config->ocrImageHeightPx));
+    Mat transmtx = imgTransform.getTransformationMatrix(pipeline_data->plate_corners, cropSize);
+    pipeline_data->crop_gray = imgTransform.crop(cropSize, transmtx);
 
 
-
-        // Apply a perspective transformation to the TextLine objects
-        // to match the newly deskewed license plate crop
-        vector<TextLine> newLines;
-        for (unsigned int i = 0; i < pipeline_data->textLines.size(); i++)
-        {        
-          vector<Point2f> textArea = imgTransform.transformSmallPointsToBigImage(pipeline_data->textLines[i].textArea);
-          vector<Point2f> linePolygon = imgTransform.transformSmallPointsToBigImage(pipeline_data->textLines[i].linePolygon);
-
-          vector<Point2f> textAreaRemapped;
-          vector<Point2f> linePolygonRemapped;
-
-          textAreaRemapped = imgTransform.remapSmallPointstoCrop(textArea, transmtx);
-          linePolygonRemapped = imgTransform.remapSmallPointstoCrop(linePolygon, transmtx);
-
-          newLines.push_back(TextLine(textAreaRemapped, linePolygonRemapped, pipeline_data->crop_gray.size()));
-        }
-
-        pipeline_data->textLines.clear();
-        for (unsigned int i = 0; i < newLines.size(); i++)
-          pipeline_data->textLines.push_back(newLines[i]);
+    if (this->config->debugGeneral)
+      displayImage(config, "quadrilateral", pipeline_data->crop_gray);
 
 
 
-        if (config->debugTiming)
-        {
-          timespec endTime;
-          getTimeMonotonic(&endTime);
-          cout << "deskew Time: " << diffclock(startTime, endTime) << "ms." << endl;
-        }
+    // Apply a perspective transformation to the TextLine objects
+    // to match the newly deskewed license plate crop
+    vector<TextLine> newLines;
+    for (unsigned int i = 0; i < pipeline_data->textLines.size(); i++)
+    {        
+      vector<Point2f> textArea = imgTransform.transformSmallPointsToBigImage(pipeline_data->textLines[i].textArea);
+      vector<Point2f> linePolygon = imgTransform.transformSmallPointsToBigImage(pipeline_data->textLines[i].linePolygon);
 
-        charSegmenter = new CharacterSegmenter(pipeline_data);
+      vector<Point2f> textAreaRemapped;
+      vector<Point2f> linePolygonRemapped;
 
+      textAreaRemapped = imgTransform.remapSmallPointstoCrop(textArea, transmtx);
+      linePolygonRemapped = imgTransform.remapSmallPointstoCrop(linePolygon, transmtx);
 
-        pipeline_data->plate_area_confidence = 100;
-      }
-
+      newLines.push_back(TextLine(textAreaRemapped, linePolygonRemapped, pipeline_data->crop_gray.size()));
     }
+
+    pipeline_data->textLines.clear();
+    for (unsigned int i = 0; i < newLines.size(); i++)
+      pipeline_data->textLines.push_back(newLines[i]);
+
+
+
+    if (config->debugTiming)
+    {
+      timespec endTime;
+      getTimeMonotonic(&endTime);
+      cout << "deskew Time: " << diffclock(startTime, endTime) << "ms." << endl;
+    }
+
+    charSegmenter = new CharacterSegmenter(pipeline_data);
+
+
   }
+
 
 }

@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  *
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  *
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License
  * version 3 as published by the Free Software Foundation
  *
@@ -88,7 +88,7 @@ int main( int argc, const char** argv )
   if (benchmarkName.compare("segocr") == 0)
   {
     Config* config = new Config(country);
-    config->debugOff();
+    config->setDebug(false);
     config->skipDetection = true;
 
     AlprImpl alpr(country);
@@ -160,10 +160,10 @@ int main( int argc, const char** argv )
     timespec endTime;
 
     Config config(country);
-    config.debugOff();
+    config.setDebug(false);
 
     AlprImpl alpr(country);
-    alpr.config->debugOff();
+    alpr.config->setDebug(false);
     alpr.setDetectRegion(true);
 
     Detector* plateDetector = createDetector(&config);
@@ -224,7 +224,7 @@ int main( int argc, const char** argv )
           double analysisTime = diffclock(startTime, endTime);
           cout << "\tRegion " << z << ": Analysis time: " << analysisTime << "ms." << endl;
 
-          if (pipeline_data.plate_area_confidence > 10)
+          if (!pipeline_data.disqualified)
           {
             lpAnalysisPositiveTimes.push_back(analysisTime);
 

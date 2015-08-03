@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  *
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  *
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License
  * version 3 as published by the Free Software Foundation
  *
@@ -53,7 +53,6 @@ namespace alpr
     std::vector<Letter> letter_details;
   };
 
-  bool wordCompare( const PPResult &left, const PPResult &right );
   bool letterCompare( const Letter &left, const Letter &right );
 
   
@@ -77,7 +76,7 @@ namespace alpr
       
     private:
       Config* config;
-      //void getTopN();
+
       void findAllPermutations(std::string templateregion, int topn);
       bool analyzePermutation(std::vector<int> letterIndices, std::string templateregion, int topn);
 

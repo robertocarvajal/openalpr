@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  *
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  *
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License
  * version 3 as published by the Free Software Foundation
  *
@@ -17,6 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <sstream>
+
 #include "regexrule.h"
 
 using namespace std;
@@ -27,6 +29,7 @@ namespace alpr
 {
    
   RegexRule::RegexRule(string region, string pattern)
+  //: re2_regex("")
   {   
     this->original = pattern;
     this->region = region;
@@ -39,6 +42,7 @@ namespace alpr
       return;
     }
     
+    std::stringstream regexval;
     string::iterator utf_iterator = pattern.begin();
     numchars = 0;
     while (utf_iterator < pattern.end())
@@ -47,9 +51,10 @@ namespace alpr
       
       string utf_character = utf8chr(cp);
       
+      
       if (utf_character == "[")
       {
-        this->regex = this->regex + "[";
+        regexval << "[";
         
         while (utf_character != "]" )
         {
@@ -58,28 +63,28 @@ namespace alpr
           int cp = utf8::next(utf_iterator, pattern.end());
 
           utf_character = utf8chr(cp);
-          this->regex = this->regex + utf_character;
+          regexval << utf_character;
         }
         
       }
       else if (utf_character == "\\")
       {
         // Don't add "\" characters to our character count
-        this->regex = this->regex + utf_character;
+        regexval << utf_character;
         continue;
       }
       else if (utf_character == "?")
       {
-        this->regex = this->regex + '.';
+        regexval << ".";
         this->skipPositions.push_back(numchars);
       }
       else if (utf_character == "@")
       {
-        this->regex = this->regex + "\\p{Alpha}";
+        regexval << "\\pL";
       }
       else if (utf_character == "#")
       {
-        this->regex = this->regex + "\\p{Digit}";
+        regexval << "\\pN";
       }
       else if ((utf_character == "*") || (utf_character == "+"))
       {
@@ -87,26 +92,19 @@ namespace alpr
       }
       else
       {
-        this->regex = this->regex + utf_character;
+        regexval << utf_character;
       }
 
       numchars++;
     }
 
-    // Onigurama is not thread safe when compiling regex.  Using a mutex to ensure that
-    // we don't crash
-    regexrule_mutex_m.lock();
-    UChar* cstr_pattern = (UChar* )this->regex.c_str();
-    OnigErrorInfo einfo;
+    this->regex = regexval.str();
 
-    int r = onig_new(&onig_regex, cstr_pattern, cstr_pattern + strlen((char* )cstr_pattern),
-      ONIG_OPTION_DEFAULT, ONIG_ENCODING_UTF8, ONIG_SYNTAX_DEFAULT, &einfo);
-
-    regexrule_mutex_m.unlock(); 
+    re2_regex = new re2::RE2(this->regex);
     
-    if (r != ONIG_NORMAL) {
-      //char s[ONIG_MAX_ERROR_MESSAGE_LEN];
-      //onig_error_code_to_str(s, r, &einfo);
+
+    
+    if (!re2_regex->ok()) {
       cerr << "Unable to load regex: " << pattern << endl;
     }
     else
@@ -118,8 +116,7 @@ namespace alpr
   
   RegexRule::~RegexRule()
   {
-    onig_free(onig_regex);
-    onig_end();
+    delete re2_regex;
   }
 
   bool RegexRule::match(string text)
@@ -138,17 +135,9 @@ namespace alpr
     if (text_char_length != numchars)
       return false;
 
-    OnigRegion *region = onig_region_new();
-    unsigned char *start, *end;
-    UChar* cstr_text = (UChar* )text.c_str();
-    end   = cstr_text + strlen((char* )cstr_text);
-    start = cstr_text;
-    
-    int match = onig_match(onig_regex, cstr_text, end, start, region, ONIG_OPTION_NONE);
-    
-    onig_region_free(region, 1);
-    
-    return match == text.length();
+    bool match = re2::RE2::FullMatch(text, *re2_regex);
+
+    return match;
   }
 
   string RegexRule::filterSkips(string text)

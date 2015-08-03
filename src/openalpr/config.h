@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  * 
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  * 
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License 
  * version 3 as published by the Free Software Foundation 
  * 
@@ -21,10 +21,6 @@
 #ifndef OPENALPR_CONFIG_H
 #define OPENALPR_CONFIG_H
 
-
-#include "simpleini/simpleini.h"
-#include "support/filesystem.h"
-#include "support/platform.h"
 
 #include "constants.h"
 
@@ -101,10 +97,8 @@ namespace alpr
 
       float postProcessMinConfidence;
       float postProcessConfidenceSkipLevel;
-      unsigned int postProcessMaxSubstitutions;
       unsigned int postProcessMinCharacters;
       unsigned int postProcessMaxCharacters;
-
 
       bool debugGeneral;
       bool debugTiming;
@@ -121,7 +115,7 @@ namespace alpr
       bool debugShowImages;
       bool debugPauseOnFrame;
 
-      void debugOff();
+      void setDebug(bool value);
 
       std::string getKeypointsRuntimeDir();
       std::string getCascadeRuntimeDir();
@@ -138,10 +132,6 @@ namespace alpr
       void loadCommonValues(std::string configFile);
       void loadCountryValues(std::string configFile, std::string country);
 
-      int getInt(CSimpleIniA* ini, std::string section, std::string key, int defaultValue);
-      float getFloat(CSimpleIniA* ini, std::string section, std::string key, float defaultValue);
-      std::string getString(CSimpleIniA* ini, std::string section, std::string key, std::string defaultValue);
-      bool getBoolean(CSimpleIniA* ini, std::string section, std::string key, bool defaultValue);
   };
 
 

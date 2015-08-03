@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2015 New Designs Unlimited, LLC
- * Opensource Automated License Plate Recognition [http://www.openalpr.com]
+ * Copyright (c) 2015 OpenALPR Technology, Inc.
+ * Open source Automated License Plate Recognition [http://www.openalpr.com]
  *
- * This file is part of OpenAlpr.
+ * This file is part of OpenALPR.
  *
- * OpenAlpr is free software: you can redistribute it and/or modify
+ * OpenALPR is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License
  * version 3 as published by the Free Software Foundation
  *
@@ -373,8 +373,7 @@ int main(int argc, char** argv) {
 
   drawImage(imgOriginal);
 
-  
-  while (true)
+  while (cvGetWindowHandle(WINDOW_NAME.c_str()) != 0)
   {
 
     char c = waitKey(15);
@@ -382,8 +381,12 @@ int main(int argc, char** argv) {
     if (c == 'o')
     {
       cout << "prewarp = " << get_config() << endl;
-
+    } else if (c == 'q')
+    {
+      cout << "prewarp = " << get_config() << endl;
+      break;
     }
+
   }
 
   cvDestroyAllWindows();

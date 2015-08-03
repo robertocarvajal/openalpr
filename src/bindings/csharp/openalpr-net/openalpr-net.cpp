@@ -1,9 +1,9 @@
 /*
-* Copyright (c) 2014 New Designs Unlimited, LLC
+* Copyright (c) 2015 OpenALPR Technology, Inc.
 *
-* This file is part of OpenAlpr.Net.
+* This file is part of OpenALPR.
 *
-* OpenAlpr.Net is free software: you can redistribute it and/or modify
+* OpenALPR is free software: you can redistribute it and/or modify
 * it under the terms of the GNU Affero General Public License
 * version 3 as published by the Free Software Foundation
 *
@@ -18,100 +18,34 @@
 
 #include "stdafx.h"
 #include "openalpr-net.h"
-#include "alpr.h"
-#include <stdlib.h>
-#include <string.h>
-#include <windows.h>
-#using <mscorlib.dll>
-//#include <msclr\marshal.h>
-#include <msclr\marshal_cppstd.h>
-
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
 
 using namespace System;
-using namespace msclr::interop;
-using namespace System::Collections::Generic;
-using namespace System::Runtime::InteropServices;
-using namespace System::Drawing;
 using namespace alpr;
 
 namespace openalprnet {
-
-	private ref class AlprHelper sealed
-	{
-	public:
-		static std::vector<char> ToVector(array<char>^ src)
-		{
-			std::vector<char> result(src->Length);
-			pin_ptr<char> pin(&src[0]);
-			char *first(pin), *last(pin + src->Length);
-			std::copy(first, last, result.begin());
-			return result;
-		}
-
-		static std::vector<AlprRegionOfInterest> ToVector(List<System::Drawing::Rectangle>^ src)
-		{
-			std::vector<AlprRegionOfInterest> result;
-
-			for each(System::Drawing::Rectangle^ rect in src)
-			{
-				AlprRegionOfInterest roi(rect->X, rect->Y, rect->Width, rect->Height);
-				result.push_back(roi);
-			}
-
-			return result;
-		}
-
-		static unsigned char* ToCharPtr(array<unsigned char>^ src)
-		{
-			//unsigned char* result = (unsigned char*) new unsigned char[src->Length];
-			pin_ptr<unsigned char> pin(&src[0]);
-			unsigned char* pc = pin;
-			return pc;
-		}
-
-		static System::String^ ToManagedString(std::string s)
-		{
-			return gcnew String(s.c_str());
-		}
-
-		static std::string ToStlString(System::String^ s)
-		{
-			IntPtr ptr = Marshal::StringToHGlobalAnsi(s);
-			if(ptr != IntPtr::Zero)
-			{
-				std::string tmp(reinterpret_cast<char*>(static_cast<void*>(ptr)));
-				Marshal::FreeHGlobal(ptr);
-				return tmp;
-			}
-			return std::string();
-		}
-	};
 
 	public ref class AlprPlateNet sealed
 	{
 	public:
 		AlprPlateNet(AlprPlate plate){
-			//_characters = marshal_as<System::String^>(plate.characters);
 			m_characters = AlprHelper::ToManagedString(plate.characters);
 			m_overall_confidence=plate.overall_confidence;
 			m_matches_template=plate.matches_template;
 		}
 
-		property System::String^ characters {
+		property System::String^ Characters {
 			System::String^ get() {
 				return m_characters;
 			}
 		}
 
-		property float overall_confidence {
+		property float OverallConfidence {
 			float get() {
 				return m_overall_confidence;
 			}
 		}
 
-		property bool matches_template {
+		property bool MatchesTemplate {
 			bool get() {
 				return m_matches_template;
 			}
@@ -147,49 +81,49 @@ namespace openalprnet {
 			}
 		}
 
-		property int requested_topn {
+		property int RequestedTopN {
 			int get() {
 				return m_requested_topn;
 			}
 		}
 
-		property int regionConfidence {
+		property int RegionConfidence {
 			int get() {
 				return m_regionConfidence;
 			}
 		}
 
-		property int plate_index {
+		property int PlateIndex {
 			int get() {
 				return m_plate_index;
 			}
 		}
 
-		property System::String^ region {
+		property System::String^ Region {
 			System::String^ get() {
 				return m_region;
 			}
 		}
 
-		property AlprPlateNet^ bestPlate {
+		property AlprPlateNet^ BestPlate {
 			AlprPlateNet^ get() {
 				return m_bestPlate;
 			}
 		}
 
-		property List<System::Drawing::Point>^ plate_points {
+		property List<System::Drawing::Point>^ PlatePoints {
 			List<System::Drawing::Point>^ get() {
 				return m_plate_points;
 			}
 		} 
 
-		property List<AlprPlateNet^>^ topNPlates {
+		property List<AlprPlateNet^>^ TopNPlates {
 			List<AlprPlateNet^>^ get() {
 				return m_topNPlates;
 			}
 		}
 
-		property float processing_time_ms {
+		property float ProcessingTimeMs {
 			float get() {
 				return m_processing_time_ms;
 			}
@@ -238,43 +172,43 @@ namespace openalprnet {
 			m_json = AlprHelper::ToManagedString(json);
 		}
 
-		property long epoch_time {
+		property long EpochTime {
 			long get() {
 				return m_epoch_time;
 			}
 		}
 
-		property int img_width {
+		property int ImageWidth {
 			int get() {
 				return m_img_width;
 			}
 		}
 
-		property int img_height {
+		property int ImageHeight {
 			int get() {
 				return m_img_height;
 			}
 		}
 
-		property float total_processing_time_ms {
+		property float TotalProcessingTimeMs {
 			float get() {
 				return m_total_processing_time_ms;
 			}
 		}
 
-		property List<System::Drawing::Rectangle>^ regionsOfInterest {
+		property List<System::Drawing::Rectangle>^ RegionsOfInterest {
 			List<System::Drawing::Rectangle>^ get() {
 				return m_regionsOfInterest;
 			}
 		}
 
-		property List<AlprPlateResultNet^>^ plates {
+		property List<AlprPlateResultNet^>^ Plates {
 			List<AlprPlateResultNet^>^ get() {
 				return m_plates;
 			}
 		}
 
-		property System::String^ json {
+		property System::String^ Json {
 			System::String^ get() {
 				return m_json;
 			}
@@ -334,15 +268,30 @@ namespace openalprnet {
 		bool m_cancel;
 	};
 
-	public ref class AlprNet sealed
+	public ref class AlprNet sealed : IDisposable
 	{
 	public:
 		// Allocate the native object on the C++ Heap via a constructor
-		AlprNet(System::String^ country, System::String^ configFile, System::String^ runtimeDir) : m_Impl( new Alpr(marshal_as<std::string>(country), marshal_as<std::string>(configFile), marshal_as<std::string>(runtimeDir)) ) { }
+		AlprNet(System::String^ country, System::String^ configFile, System::String^ runtimeDir) : m_Impl( new Alpr(marshal_as<std::string>(country), marshal_as<std::string>(configFile), marshal_as<std::string>(runtimeDir)) )
+		{
+			this->m_config = gcnew AlprConfigNet(this->m_Impl->getConfig());
+		}
 
-		// Deallocate the native object on a destructor
-		~AlprNet(){
-			delete m_Impl;
+		~AlprNet() {
+			if(this->m_disposed)
+			{
+				return;
+			}
+
+			this->!AlprNet();
+			this->m_disposed = true;
+		}
+	
+		property AlprConfigNet^ Configuration {
+			AlprConfigNet^ get()
+			{
+				return this->m_config;
+			}
 		}
 
 		property int TopN {
@@ -377,7 +326,7 @@ namespace openalprnet {
 
 		event EventHandler<AlprFrameEventArgs^>^ FrameProcessed;
 
-		void recognizeFromVideo(System::String^ videoPath) {
+		void RecognizeFromVideo(System::String^ videoPath) {
 			if (System::IO::File::Exists(videoPath)) {
 				int framenum = 0;
 				cv::VideoCapture cap = cv::VideoCapture();
@@ -411,7 +360,7 @@ namespace openalprnet {
 		/// <summary>
 		/// Recognize from an image on disk
 		/// </summary>
-		AlprResultsNet^ recognize(System::String^ filepath) {
+		AlprResultsNet^ Recognize(System::String^ filepath) {
 			AlprResults results = m_Impl->recognize(marshal_as<std::string>(filepath));
 			return gcnew AlprResultsNet(results);
 		}
@@ -419,7 +368,7 @@ namespace openalprnet {
 		/// <summary>
 		/// Recognize from an image on disk
 		/// </summary>
-		AlprResultsNet^ recognize(System::String^ filepath, List<System::Drawing::Rectangle>^ regionsOfInterest) {
+		AlprResultsNet^ Recognize(System::String^ filepath, List<System::Drawing::Rectangle>^ regionsOfInterest) {
 			cv::Mat frame = cv::imread( marshal_as<std::string>(filepath) );
 			std::vector<AlprRegionOfInterest> rois = AlprHelper::ToVector(regionsOfInterest);
 			AlprResults results = m_Impl->recognize(frame.data, frame.elemSize(), frame.cols, frame.rows, rois );
@@ -427,10 +376,57 @@ namespace openalprnet {
 		}
 
 		/// <summary>
+		/// Recognize from a bitmap
+		/// </summary>
+		AlprResultsNet^ Recognize(Bitmap^ bitmap)
+		{
+			return Recognize(bitmap, gcnew List<System::Drawing::Rectangle>());
+		}
+
+		/// <summary>
+		/// Recognize from a bitmap
+		/// </summary>
+		AlprResultsNet^ Recognize(Bitmap^ bitmap, List<System::Drawing::Rectangle>^ regionsOfInterest)
+		{
+			BitmapMat^ wrapper = gcnew BitmapMat(bitmap);
+			cv::Mat frame = wrapper->Value;
+			std::vector<AlprRegionOfInterest> rois = AlprHelper::ToVector(regionsOfInterest);
+			AlprResults results = m_Impl->recognize(frame.data, frame.elemSize(), frame.cols, frame.rows, rois);
+			delete wrapper;
+			return gcnew AlprResultsNet(results);
+		}
+
+		/// <summary>
+		/// Recognize from MemoryStream representing an encoded image (e.g., BMP, PNG, JPG, GIF etc).
+		/// </summary>
+		AlprResultsNet^ Recognize(MemoryStream^ memoryStream)
+		{
+			return Recognize(memoryStream, gcnew List<System::Drawing::Rectangle>());
+		}
+
+		/// <summary>
+		/// Recognize from MemoryStream representing an encoded image (e.g., BMP, PNG, JPG, GIF etc).
+		/// </summary>
+		AlprResultsNet^ Recognize(MemoryStream^ memoryStream, List<System::Drawing::Rectangle>^ regionsOfInterest)
+		{
+			std::vector<char> p = AlprHelper::MemoryStreamToVector(memoryStream);
+			AlprResults results = m_Impl->recognize(p);
+			return gcnew AlprResultsNet(results);
+		}
+
+		/// <summary>
 		/// Recognize from byte data representing an encoded image (e.g., BMP, PNG, JPG, GIF etc).
 		/// </summary>
 		/// <param name="imageBuffer">Bytes representing image data</param>
-		AlprResultsNet^ recognize(cli::array<char>^ imageBuffer) {
+		AlprResultsNet^ Recognize(cli::array<Byte>^ imageBuffer) {
+			return Recognize(imageBuffer, gcnew List<System::Drawing::Rectangle>());
+		}
+
+		/// <summary>
+		/// Recognize from byte data representing an encoded image (e.g., BMP, PNG, JPG, GIF etc).
+		/// </summary>
+		/// <param name="imageBuffer">Bytes representing image data</param>
+		AlprResultsNet^ Recognize(cli::array<Byte>^ imageBuffer, List<System::Drawing::Rectangle>^ regionsOfInterest) {
 			std::vector<char> p = AlprHelper::ToVector(imageBuffer);
 			AlprResults results = m_Impl->recognize(p);
 			return gcnew AlprResultsNet(results);
@@ -439,19 +435,26 @@ namespace openalprnet {
 		/// <summary>
 		/// Recognize from raw pixel data
 		/// </summary>
-		AlprResultsNet^ recognize(cli::array<unsigned char>^ pixelData, int bytesPerPixel, int imgWidth, int imgHeight, List<System::Drawing::Rectangle>^ regionsOfInterest) {
-			unsigned char* p = AlprHelper::ToCharPtr(pixelData);
+		AlprResultsNet^ Recognize(cli::array<Byte>^ imageBuffer, int bytesPerPixel, int imgWidth, int imgHeight) {
+			return Recognize(imageBuffer, bytesPerPixel, imgWidth, imgHeight, gcnew List<System::Drawing::Rectangle>());
+		}
+
+		/// <summary>
+		/// Recognize from raw pixel data
+		/// </summary>
+		AlprResultsNet^ Recognize(cli::array<Byte>^ imageBuffer, int bytesPerPixel, int imgWidth, int imgHeight, List<System::Drawing::Rectangle>^ regionsOfInterest) {
+			unsigned char* p = AlprHelper::ToCharPtr(imageBuffer);
 			std::vector<AlprRegionOfInterest> rois = AlprHelper::ToVector(regionsOfInterest);
 			AlprResults results = m_Impl->recognize(p, bytesPerPixel, imgWidth, imgHeight, rois);
 			free(p); // ?? memory leak?
 			return gcnew AlprResultsNet(results);
 		}
 
-		bool isLoaded() {
+		bool IsLoaded() {
 			return m_Impl->isLoaded();
 		}
 
-		static System::String^ getVersion() {
+		static System::String^ GetVersion() {
 			return AlprHelper::ToManagedString(Alpr::getVersion());
 		}
 
@@ -459,12 +462,15 @@ namespace openalprnet {
 		// Deallocate the native object on the finalizer just in case no destructor is called
 		!AlprNet() {
 			delete m_Impl;
+			delete m_config;
 		}
-
+	
 	private:
 		Alpr * m_Impl;
+		AlprConfigNet^ m_config;
 		int m_topN;
 		bool m_detectRegion;
 		System::String^ m_defaultRegion;
+		bool m_disposed;
 	};
 }
